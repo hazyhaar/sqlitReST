@@ -12,12 +12,12 @@ import (
 
 // DataComponent represents a component that displays data from SQL queries
 type DataComponent struct {
-	Type       string                   // table, list, cards
-	Title      string                   // Optional title
-	Columns    []ColumnDef              // Column definitions
-	Rows       []engine.Row             // Data rows
-	Pagination *PaginationInfo          // Pagination info
-	Options    map[string]interface{}   // Additional options
+	Type       string                 // table, list, cards
+	Title      string                 // Optional title
+	Columns    []ColumnDef            // Column definitions
+	Rows       []engine.Row           // Data rows
+	Pagination *PaginationInfo        // Pagination info
+	Options    map[string]interface{} // Additional options
 }
 
 // ColumnDef defines a table column

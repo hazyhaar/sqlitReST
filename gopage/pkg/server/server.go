@@ -63,15 +63,12 @@ func New(cfg Config) (*Server, error) {
 
 	// Configure LLM if API key provided
 	if cfg.LLMAPIKey != "" {
-		registry.LLMAPIKey = cfg.LLMAPIKey
-		if cfg.LLMEndpoint != "" {
-			registry.LLMEndpoint = cfg.LLMEndpoint
+		llmCfg := funcs.LLMConfig{
+			Endpoint: cfg.LLMEndpoint,
+			APIKey:   cfg.LLMAPIKey,
+			Model:    cfg.LLMModel,
 		}
-		if cfg.LLMModel != "" {
-			registry.LLMModel = cfg.LLMModel
-		}
-		// Register LLM functions
-		registry.RegisterLLMFunctions()
+		registry.RegisterLLMFunctions(llmCfg)
 		log.Println("LLM functions enabled")
 	}
 
@@ -233,7 +230,6 @@ func (s *Server) findSQLFile(path string) string {
 
 	return ""
 }
-
 
 // handleSpecialResponses handles redirects and other special SQL responses
 func (s *Server) handleSpecialResponses(w http.ResponseWriter, r *http.Request, rows []engine.Row) bool {
