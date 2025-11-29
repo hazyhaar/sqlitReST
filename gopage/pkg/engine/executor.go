@@ -147,11 +147,14 @@ func (e *SQLExecutor) readColumnValue(stmt *sqlite.Stmt, idx int) interface{} {
 	case sqlite.TypeText:
 		return stmt.ColumnText(idx)
 	case sqlite.TypeBlob:
-		// Copy the bytes to avoid unsafe reference
-		src := stmt.ColumnBytes(idx, nil)
-		dst := make([]byte, len(src))
-		copy(dst, src)
-		return dst
+		// Get blob length and copy bytes
+		n := stmt.ColumnLen(idx)
+		if n == 0 {
+			return []byte{}
+		}
+		buf := make([]byte, n)
+		stmt.ColumnBytes(idx, buf)
+		return buf
 	default:
 		return stmt.ColumnText(idx)
 	}
