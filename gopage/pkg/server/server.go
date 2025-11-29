@@ -85,6 +85,8 @@ func (s *Server) setupRoutes() {
 	// Main handler for SQL pages
 	r.Get("/*", s.handleSQLPage)
 	r.Post("/*", s.handleSQLPage)
+	r.Put("/*", s.handleSQLPage)
+	r.Delete("/*", s.handleSQLPage)
 }
 
 // handleSQLPage handles requests for SQL-based pages
@@ -196,37 +198,27 @@ func (s *Server) findSQLFile(path string) string {
 
 // handleSpecialResponses handles redirects and other special SQL responses
 func (s *Server) handleSpecialResponses(w http.ResponseWriter, r *http.Request, rows []engine.Row) bool {
-	for _, row := range rows {
-		// Check for redirect
-		if redirect, ok := row["redirect"].(string); ok && redirect != "" {
-			// For HTMX requests, use HX-Redirect header
-			if r.Header.Get("HX-Request") == "true" {
-				w.Header().Set("HX-Redirect", redirect)
-				w.WriteHeader(http.StatusOK)
-			} else {
-				http.Redirect(w, r, redirect, http.StatusSeeOther)
-			}
-			return true
-		}
-
-		// Check for JSON response
-		if _, ok := row["json"]; ok {
-			w.Header().Set("Content-Type", "application/json")
-			// TODO: Implement JSON serialization
-			return true
-		}
-	}
-	return false
+	resp := ParseSQLResponse(rows)
+	return s.HandleSQLResponse(w, r, resp)
 }
 
 // handleError handles errors with appropriate response
 func (s *Server) handleError(w http.ResponseWriter, r *http.Request, err error) {
 	log.Printf("Error: %v", err)
 
+	isHTMX := r.Header.Get("HX-Request") == "true"
+	message := "Une erreur est survenue"
 	if s.config.Debug {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		message = err.Error()
+	}
+
+	if isHTMX {
+		// Return error as HTML fragment for HTMX
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(ErrorFragment(message)))
 	} else {
-		http.Error(w, "Une erreur est survenue", http.StatusInternalServerError)
+		http.Error(w, message, http.StatusInternalServerError)
 	}
 }
 

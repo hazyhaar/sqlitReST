@@ -355,9 +355,53 @@ func (r *Renderer) renderCard(props map[string]interface{}) (string, error) {
 	return buf.String(), nil
 }
 
-// renderForm renders a form component
+// renderForm renders a form component with dynamic fields
 func (r *Renderer) renderForm(props map[string]interface{}) (string, error) {
-	return `<form class="form-component" method="POST"><!-- Form fields will be rendered here --></form>`, nil
+	form := &FormComponent{
+		Method:      "POST",
+		SubmitLabel: "Envoyer",
+	}
+
+	// Extract form properties
+	if id, ok := props["id"].(string); ok {
+		form.ID = id
+	}
+	if method, ok := props["method"].(string); ok {
+		form.Method = method
+	}
+	if action, ok := props["action"].(string); ok {
+		form.Action = action
+	}
+	if title, ok := props["title"].(string); ok {
+		form.Title = title
+	}
+	if desc, ok := props["description"].(string); ok {
+		form.Description = desc
+	}
+	if submit, ok := props["submit_label"].(string); ok {
+		form.SubmitLabel = submit
+	}
+	if cancel, ok := props["cancel_url"].(string); ok {
+		form.CancelURL = cancel
+	}
+
+	// HTMX attributes
+	if hxPost, ok := props["hx_post"].(string); ok {
+		form.HxPost = hxPost
+	}
+	if hxTarget, ok := props["hx_target"].(string); ok {
+		form.HxTarget = hxTarget
+	}
+	if hxSwap, ok := props["hx_swap"].(string); ok {
+		form.HxSwap = hxSwap
+	}
+
+	// Extract fields if present
+	if fields, ok := props["fields"].([]FormField); ok {
+		form.Fields = fields
+	}
+
+	return r.RenderDynamicForm(form)
 }
 
 // renderDebug renders debug output

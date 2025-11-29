@@ -89,6 +89,136 @@
             text-align: center;
             color: var(--pico-muted-color);
         }
+
+        /* Form styles */
+        .form-component {
+            max-width: 600px;
+        }
+
+        .form-fields {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .form-field {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-field.field-half {
+            width: 50%;
+        }
+
+        .form-field.field-third {
+            width: 33.33%;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--pico-muted-border-color);
+        }
+
+        .required {
+            color: var(--pico-del-color);
+            margin-left: 0.25rem;
+        }
+
+        /* Alert/Toast styles */
+        .alert {
+            padding: 1rem;
+            border-radius: var(--pico-border-radius);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .alert-success {
+            background: var(--pico-ins-color);
+            color: white;
+        }
+
+        .alert-error {
+            background: var(--pico-del-color);
+            color: white;
+        }
+
+        .alert-warning {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .alert-info {
+            background: var(--pico-primary);
+            color: white;
+        }
+
+        .alert-icon {
+            font-size: 1.25rem;
+        }
+
+        .alert-message {
+            flex: 1;
+        }
+
+        .alert-close {
+            background: none;
+            border: none;
+            color: inherit;
+            cursor: pointer;
+            font-size: 1.25rem;
+            padding: 0;
+            opacity: 0.7;
+        }
+
+        .alert-close:hover {
+            opacity: 1;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-1rem);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Toast container */
+        #toast-container {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            max-width: 400px;
+        }
+
+        /* Badge styles */
+        .badge-success {
+            background: var(--pico-ins-color);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .badge-error {
+            background: var(--pico-del-color);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
     </style>
 
     {{if .css}}
@@ -124,6 +254,61 @@
             {{end}}
         </small>
     </footer>
+
+    <!-- Toast container for notifications -->
+    <div id="toast-container"></div>
+
+    <!-- Toast handler for HTMX -->
+    <script>
+        document.body.addEventListener('showMessage', function(evt) {
+            const container = document.getElementById('toast-container');
+            const data = evt.detail || {};
+            const message = data.message || 'Notification';
+            const type = data.type || 'info';
+
+            const icons = {
+                success: '✓',
+                error: '✗',
+                warning: '⚠',
+                info: 'ℹ'
+            };
+
+            const toast = document.createElement('div');
+            toast.className = 'alert alert-' + type;
+            toast.innerHTML = `
+                <span class="alert-icon">${icons[type] || icons.info}</span>
+                <span class="alert-message">${message}</span>
+                <button type="button" class="alert-close" onclick="this.parentElement.remove()">&times;</button>
+            `;
+
+            container.appendChild(toast);
+
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.remove();
+                }
+            }, 5000);
+        });
+
+        // Listen for HTMX events
+        document.body.addEventListener('htmx:afterRequest', function(evt) {
+            // Handle any HX-Trigger headers with showMessage
+            const trigger = evt.detail.xhr.getResponseHeader('HX-Trigger');
+            if (trigger) {
+                try {
+                    const parsed = JSON.parse(trigger);
+                    if (parsed.showMessage) {
+                        document.body.dispatchEvent(new CustomEvent('showMessage', {
+                            detail: parsed.showMessage
+                        }));
+                    }
+                } catch (e) {
+                    // Not JSON, ignore
+                }
+            }
+        });
+    </script>
 
     {{if .js}}
     <script>{{.js | safe}}</script>
