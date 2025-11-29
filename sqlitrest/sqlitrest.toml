@@ -1,0 +1,15 @@
+[server]
+host = "localhost"
+port = 34334
+
+[[databases]]
+name = "main"
+path = "./data/main.db"
+mode = "readwrite"
+
+[auth.jwt]
+enabled = true
+algorithm = "HS256"
+secret = "sqlitrest-secret-key-2025"
+issuer = "sqlitrest"
+audience = ["sqlitrest-api"]
