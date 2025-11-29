@@ -12,8 +12,8 @@ import (
 type FuncType int
 
 const (
-	FuncTypeScalar FuncType = iota // Returns a single value
-	FuncTypeAggregate              // Aggregates multiple values
+	FuncTypeScalar    FuncType = iota // Returns a single value
+	FuncTypeAggregate                 // Aggregates multiple values
 )
 
 // FuncDef defines a custom SQL function
@@ -140,32 +140,32 @@ func (r *Registry) wrapScalar(fn ScalarFunc) func(ctx sqlite.Context, args []sql
 
 		result, err := fn(goCtx, args)
 		if err != nil {
-			ctx.ResultError(err)
+			ctx.SetResultError(err)
 			return
 		}
 
 		// Set result based on type
 		switch v := result.(type) {
 		case nil:
-			ctx.ResultNull()
+			ctx.SetResultNull()
 		case int:
-			ctx.ResultInt(v)
+			ctx.SetResultInt(v)
 		case int64:
-			ctx.ResultInt64(v)
+			ctx.SetResultInt64(v)
 		case float64:
-			ctx.ResultFloat(v)
+			ctx.SetResultFloat(v)
 		case string:
-			ctx.ResultText(v)
+			ctx.SetResultText(v)
 		case []byte:
-			ctx.ResultBlob(v)
+			ctx.SetResultBlob(v)
 		case bool:
 			if v {
-				ctx.ResultInt(1)
+				ctx.SetResultInt(1)
 			} else {
-				ctx.ResultInt(0)
+				ctx.SetResultInt(0)
 			}
 		default:
-			ctx.ResultText(fmt.Sprintf("%v", v))
+			ctx.SetResultText(fmt.Sprintf("%v", v))
 		}
 	}
 }
