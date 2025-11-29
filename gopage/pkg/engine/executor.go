@@ -3,9 +3,12 @@ package engine
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"zombiezen.com/go/sqlite"
 	"zombiezen.com/go/sqlite/sqlitex"
+
+	"github.com/horos/gopage/pkg/funcs"
 )
 
 // Row represents a single result row as key-value pairs
@@ -20,7 +23,11 @@ type Result struct {
 
 // SQLExecutor executes SQL queries using zombiezen
 type SQLExecutor struct {
-	pool *sqlitex.Pool
+	pool     *sqlitex.Pool
+	registry *funcs.Registry
+
+	// Track connections that have had functions applied
+	appliedConns sync.Map
 }
 
 // NewSQLExecutor creates a new SQL executor
@@ -36,6 +43,32 @@ func NewSQLExecutor(dbPath string) (*SQLExecutor, error) {
 	return &SQLExecutor{pool: pool}, nil
 }
 
+// SetRegistry sets the function registry for custom SQL functions
+func (e *SQLExecutor) SetRegistry(registry *funcs.Registry) {
+	e.registry = registry
+}
+
+// GetRegistry returns the function registry
+func (e *SQLExecutor) GetRegistry() *funcs.Registry {
+	return e.registry
+}
+
+// applyFunctionsToConn applies registered functions to a connection if not already done
+func (e *SQLExecutor) applyFunctionsToConn(conn *sqlite.Conn) error {
+	if e.registry == nil {
+		return nil
+	}
+
+	// Use pointer as key to track which connections have been setup
+	ptr := fmt.Sprintf("%p", conn)
+	if _, loaded := e.appliedConns.LoadOrStore(ptr, true); loaded {
+		// Already applied
+		return nil
+	}
+
+	return e.registry.ApplyToConnection(conn)
+}
+
 // Close closes the connection pool
 func (e *SQLExecutor) Close() error {
 	return e.pool.Close()
@@ -48,6 +81,11 @@ func (e *SQLExecutor) Execute(ctx context.Context, sql string) (*Result, error) 
 		return nil, fmt.Errorf("failed to get connection: %w", err)
 	}
 	defer e.pool.Put(conn)
+
+	// Apply custom functions to connection
+	if err := e.applyFunctionsToConn(conn); err != nil {
+		return nil, fmt.Errorf("failed to apply functions: %w", err)
+	}
 
 	return e.executeOnConn(conn, sql)
 }
@@ -123,6 +161,11 @@ func (e *SQLExecutor) ExecuteMultiple(ctx context.Context, statements []Statemen
 	}
 	defer e.pool.Put(conn)
 
+	// Apply custom functions to connection
+	if err := e.applyFunctionsToConn(conn); err != nil {
+		return nil, fmt.Errorf("failed to apply functions: %w", err)
+	}
+
 	parser := NewSQLParser()
 	var lastSelectResult []Row
 
@@ -158,5 +201,12 @@ func (e *SQLExecutor) GetConnection(ctx context.Context) (*sqlite.Conn, func(), 
 	if err != nil {
 		return nil, nil, err
 	}
+
+	// Apply custom functions to connection
+	if err := e.applyFunctionsToConn(conn); err != nil {
+		e.pool.Put(conn)
+		return nil, nil, fmt.Errorf("failed to apply functions: %w", err)
+	}
+
 	return conn, func() { e.pool.Put(conn) }, nil
 }

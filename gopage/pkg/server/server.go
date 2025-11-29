@@ -12,6 +12,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/horos/gopage/pkg/engine"
+	"github.com/horos/gopage/pkg/funcs"
 	"github.com/horos/gopage/pkg/render"
 )
 
@@ -23,6 +24,14 @@ type Config struct {
 	TemplateDir string
 	AssetsDir   string
 	Debug       bool
+
+	// LLM Configuration
+	LLMEndpoint string // API endpoint (default: Cerebras)
+	LLMAPIKey   string // API key for LLM
+	LLMModel    string // Model name (default: llama-3.3-70b)
+
+	// HTTP Configuration
+	HTTPTimeout int // Timeout in seconds for HTTP functions
 }
 
 // Server represents the GoPage HTTP server
@@ -32,6 +41,7 @@ type Server struct {
 	executor *engine.SQLExecutor
 	renderer *render.Renderer
 	parser   *engine.SQLParser
+	registry *funcs.Registry
 }
 
 // New creates a new GoPage server
@@ -48,12 +58,41 @@ func New(cfg Config) (*Server, error) {
 		return nil, fmt.Errorf("failed to create renderer: %w", err)
 	}
 
+	// Create function registry with custom SQL functions
+	registry := funcs.NewRegistry()
+
+	// Configure LLM if API key provided
+	if cfg.LLMAPIKey != "" {
+		registry.LLMAPIKey = cfg.LLMAPIKey
+		if cfg.LLMEndpoint != "" {
+			registry.LLMEndpoint = cfg.LLMEndpoint
+		}
+		if cfg.LLMModel != "" {
+			registry.LLMModel = cfg.LLMModel
+		}
+		// Register LLM functions
+		registry.RegisterLLMFunctions()
+		log.Println("LLM functions enabled")
+	}
+
+	// Configure HTTP timeout
+	if cfg.HTTPTimeout > 0 {
+		registry.HTTPTimeout = cfg.HTTPTimeout
+	}
+
+	// Register HTTP functions
+	registry.RegisterHTTPFunctions()
+
+	// Set registry on executor
+	executor.SetRegistry(registry)
+
 	s := &Server{
 		config:   cfg,
 		router:   chi.NewRouter(),
 		executor: executor,
 		renderer: renderer,
 		parser:   engine.NewSQLParser(),
+		registry: registry,
 	}
 
 	s.setupRoutes()

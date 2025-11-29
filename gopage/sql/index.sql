@@ -69,9 +69,38 @@ SELECT
     'Parcourez l''ensemble des discussions du forum' as description,
     '/topics' as link;
 
+-- Section fonctions SQL
+SELECT
+    'text' as component,
+    'Fonctions SQL Custom' as title,
+    'GoPage étend SQLite avec des fonctions puissantes.' as contents;
+
+SELECT
+    'cards' as component;
+
+SELECT
+    'Documentation' as title,
+    'Toutes les fonctions disponibles' as description,
+    '/functions' as link;
+
+SELECT
+    'Démo API' as title,
+    'Test des fonctions HTTP' as description,
+    '/api-demo' as link;
+
+SELECT
+    'Test LLM' as title,
+    'Essayez les fonctions IA' as description,
+    '/llm-test' as link;
+
+-- Info version avec fonction custom
+SELECT
+    'text' as component,
+    '<small>GoPage ' || gopage_version() || ' - Généré le ' || now_utc() || '</small>' as html;
+
 -- Debug info (en mode développement)
 SELECT
     'debug' as component,
     'Page: index' as page,
-    datetime('now', 'localtime') as rendered_at,
-    'v0.1.0' as version;
+    now_utc() as rendered_at,
+    gopage_version() as version;

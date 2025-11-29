@@ -27,6 +27,14 @@ func main() {
 	debug := flag.Bool("debug", false, "Enable debug mode")
 	showVersion := flag.Bool("version", false, "Show version and exit")
 
+	// LLM configuration
+	llmEndpoint := flag.String("llm-endpoint", "", "LLM API endpoint (default: Cerebras)")
+	llmAPIKey := flag.String("llm-api-key", "", "LLM API key (or use LLM_API_KEY env)")
+	llmModel := flag.String("llm-model", "", "LLM model name (default: llama-3.3-70b)")
+
+	// HTTP configuration
+	httpTimeout := flag.Int("http-timeout", 30, "Timeout for HTTP functions (seconds)")
+
 	flag.Parse()
 
 	if *showVersion {
@@ -40,6 +48,16 @@ func main() {
 		log.Fatalf("Failed to get working directory: %v", err)
 	}
 
+	// Get LLM API key from flag or environment
+	apiKey := *llmAPIKey
+	if apiKey == "" {
+		apiKey = os.Getenv("LLM_API_KEY")
+	}
+	// Also check CEREBRAS_API_KEY for convenience
+	if apiKey == "" {
+		apiKey = os.Getenv("CEREBRAS_API_KEY")
+	}
+
 	cfg := server.Config{
 		Port:        *port,
 		DBPath:      resolvePath(workDir, *dbPath),
@@ -47,6 +65,10 @@ func main() {
 		TemplateDir: resolvePath(workDir, *templateDir),
 		AssetsDir:   resolvePath(workDir, *assetsDir),
 		Debug:       *debug,
+		LLMEndpoint: *llmEndpoint,
+		LLMAPIKey:   apiKey,
+		LLMModel:    *llmModel,
+		HTTPTimeout: *httpTimeout,
 	}
 
 	// Ensure required directories exist
@@ -117,5 +139,14 @@ func printStartupInfo(cfg server.Config) {
 	log.Printf("  Templates: %s", cfg.TemplateDir)
 	log.Printf("  Assets:    %s", cfg.AssetsDir)
 	log.Printf("  Debug:     %v", cfg.Debug)
+	if cfg.LLMAPIKey != "" {
+		log.Printf("  LLM:       enabled")
+		if cfg.LLMModel != "" {
+			log.Printf("  LLM Model: %s", cfg.LLMModel)
+		}
+	} else {
+		log.Printf("  LLM:       disabled (no API key)")
+	}
+	log.Printf("  HTTP Timeout: %ds", cfg.HTTPTimeout)
 	log.Println("=================================")
 }
