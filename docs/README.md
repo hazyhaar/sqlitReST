@@ -1,215 +1,410 @@
-# SQLitREST - PostgREST pour SQLite
+# SQLitREST Documentation
 
-**Statut** : 🟡 En attente de validation avant implémentation
+## Overview
 
-**Objectif** : API REST automatique pour SQLite, inspirée de PostgREST, adaptée au contexte mono-user et Horos.
+SQLitREST is a lightweight, high-performance REST API server for SQLite databases, designed as a 100% PostgREST-compatible alternative. Built in pure Go with modern architecture, it provides instant REST APIs for any SQLite database with zero configuration.
 
----
+## Quick Start
 
-## 📚 Documentation Produite
+### Installation
 
-| Fichier | Contenu |
-|---------|---------|
-| **[CRITIQUE_ET_PROPOSITION.md](./CRITIQUE_ET_PROPOSITION.md)** | Analyse critique de l'approche autoclaude + proposition alternative progressive |
-| **[ARCHITECTURE_TECHNIQUE.md](./ARCHITECTURE_TECHNIQUE.md)** | Architecture détaillée MVP Phase 1 avec exemples de code Go |
-| **[AUTH_PATTERN.md](./AUTH_PATTERN.md)** | Pattern auth tierce par découverte automatique (`.auth.db`) |
+```bash
+# Clone the repository
+git clone https://github.com/hazyhaar/sqlitReST.git
+cd sqlitReST/sqlitrest
 
----
+# Build the binary
+go build -o sqlitrest ./cmd/sqlitrest
 
-## 🎯 Proposition Résumée
-
-### Approche Progressive
-
-```
-Phase 1 (MVP)     : Mono-user, SQLite unique, CRUD + filtres PostgREST
-  ↓ 5-7 jours
-Phase 2           : Multi-DB support (pattern Horos 4-BDD)
-  ↓ 1 semaine
-Phase 3           : Auth par découverte (.auth.db)
-  ↓ 3-4 jours
-Phase 4 (optionnel): Multi-user complet + gRPC + policies
+# Or run directly
+go run ./cmd/sqlitrest serve
 ```
 
-### Stack Technique (Phase 1)
+### Basic Usage
 
-```go
-// 4 dépendances seulement
-zombiezen.com/go/sqlite    // Driver SQLite (WAL, pool, CGO-free)
-github.com/go-chi/chi/v5   // HTTP router
-github.com/go-chi/cors     // CORS
-github.com/swaggo/swag     // OpenAPI generation
+```bash
+# Start the server
+./sqlitrest serve
+
+# Generate JWT tokens
+./sqlitrest generate-token
+
+# Make API requests
+curl -H "Authorization: Bearer <token>" http://localhost:34334/users
 ```
 
-### Fonctionnalités MVP
+## Features
 
-| Feature | Status |
-|---------|--------|
-| Introspection SQLite | ✅ Planifié |
-| CRUD automatique | ✅ Planifié |
-| Filtres PostgREST (?col=eq.X) | ✅ Planifié |
-| Embedding FK | ✅ Planifié |
-| Pagination | ✅ Planifié |
-| UDF Go exposées | ✅ Planifié |
-| OpenAPI auto-gen | ✅ Planifié |
-| **Auth multi-user** | ⏸️ Phase 3 |
-| **gRPC** | ⏸️ Phase 4 |
-| **Policies RLS-like** | ⏸️ Phase 4 |
+### ✅ 100% PostgREST Compatible
+- Same filter syntax: `id=eq.1`, `name=like.john*`
+- Same media types: JSON, CSV, single object, EXPLAIN plan
+- Same authentication flow with JWT
+- Same error codes and response format
+
+### 🚀 Advanced Features
+- **Resource Embedding**: `select=*,posts(title,content)`
+- **Logical Operators**: `and=(id.eq.1,name.eq.test)`
+- **Row Level Security**: Dynamic policies per table
+- **Schema Caching**: 5-minute TTL for performance
+- **OpenAPI 3.0**: Automatic specification generation
+- **RPC Functions**: Custom SQL functions via `/rpc/*`
+
+### 🏗️ Architecture
+- **Pure Go**: No CGO dependencies
+- **Modern SQLite**: Uses modernc.org/sqlite driver
+- **Multi-Database**: Support for multiple SQLite files
+- **Configuration**: TOML-based configuration
+- **Production Ready**: Comprehensive error handling
+
+## API Reference
+
+### CRUD Operations
+
+```bash
+# GET all records
+GET /users
+
+# GET with filters
+GET /users?id=eq.1&age=gt.18
+
+# POST new record
+POST /users
+{"name": "John", "email": "john@example.com"}
+
+# PATCH existing record
+PATCH /users?id=eq.1
+{"name": "John Updated"}
+
+# DELETE record
+DELETE /users?id=eq.1
+```
+
+### Advanced Filtering
+
+```bash
+# Logical operators
+GET /users?and=(id.eq.1,age.gt.18)
+GET /users?or=(name.eq.john*,role.eq.admin)
+
+# Complex filters
+GET /users?name=ilike.john*&age=gte.18&role=eq.user
+
+# Range filters
+GET /users?age=gte.18&age=lte.65
+```
+
+### Resource Embedding
+
+```bash
+# Include related tables
+GET /users?select=*,posts(title,created_at)
+
+# Nested relations
+GET /posts?select=*,users(name,email)
+
+# Specific columns
+GET /users?select=id,name,email
+```
+
+### Media Types
+
+```bash
+# JSON (default)
+curl -H "Accept: application/json" /users
+
+# CSV export
+curl -H "Accept: text/csv" /users
+
+# Single object
+curl -H "Accept: application/vnd.pgrst.object" /users?id=eq.1
+
+# EXPLAIN plan
+curl -H "Accept: application/vnd.pgrst.plan" /users
+```
+
+### Authentication
+
+```bash
+# Generate tokens
+./sqlitrest generate-token
+
+# Use tokens
+curl -H "Authorization: Bearer <token>" /users
+
+# Admin token (full access)
+curl -H "Authorization: Bearer <admin-token>" /users
+
+# User token (restricted access)
+curl -H "Authorization: Bearer <user-token>" /users?id=eq.2
+```
+
+## Configuration
+
+### sqlitrest.toml
+
+```toml
+[server]
+host = "localhost"
+port = 34334
+
+[[databases]]
+name = "main"
+path = "./data/main.db"
+mode = "readwrite"
+
+[auth.jwt]
+enabled = true
+algorithm = "HS256"
+secret = "your-secret-key"
+issuer = "sqlitrest"
+audience = ["sqlitrest-api"]
+```
+
+### Environment Variables
+
+```bash
+# Server configuration
+export SQLITREST_HOST=localhost
+export SQLITREST_PORT=34334
+
+# JWT configuration
+export SQLITREST_JWT_SECRET=your-secret-key
+export SQLITREST_JWT_ENABLED=true
+```
+
+## Row Level Security
+
+### Creating Policies
+
+```sql
+-- Users can see their own records
+INSERT INTO _policies (name, table_name, action, expression, description)
+VALUES ('users_select_own', 'users', 'SELECT', 
+        'id = current_user_id() OR current_role() = ''admin''', 
+        'Users can see their own profile, admins can see all');
+
+-- Only admins can delete
+INSERT INTO _policies (name, table_name, action, expression, description)
+VALUES ('users_delete_admin_only', 'users', 'DELETE', 
+        'current_role() = ''admin''', 
+        'Only admins can delete users');
+```
+
+### Policy Functions
+
+- `current_user_id()` - Current authenticated user ID
+- `current_role()` - Current user role
+- `current_tenant_id()` - Current tenant ID (if applicable)
+
+## RPC Functions
+
+### Creating Functions
+
+```sql
+-- Simple function
+CREATE FUNCTION hello(name TEXT) RETURNS TEXT AS '
+    SELECT ''Hello, '' || name || ''!''
+';
+
+-- Complex function
+CREATE FUNCTION user_stats() RETURNS TABLE(
+    total_users INTEGER,
+    active_users INTEGER,
+    admin_count INTEGER
+) AS '
+    SELECT 
+        COUNT(*) as total_users,
+        COUNT(CASE WHEN role = ''user'' THEN 1 END) as active_users,
+        COUNT(CASE WHEN role = ''admin'' THEN 1 END) as admin_count
+    FROM users
+';
+```
+
+### Using RPC
+
+```bash
+# Call function
+GET /rpc/hello?name=World
+
+# Call with POST
+POST /rpc/user_stats
+
+# List functions
+GET /rpc/
+```
+
+## Debug Endpoints
+
+```bash
+# Database information
+GET /_debug/databases
+
+# Authentication context
+GET /_debug/auth
+
+# Active policies
+GET /_debug/policies
+
+# Schema information
+GET /_debug/schema?table=users
+
+# Cache statistics
+GET /_debug/cache
+```
+
+## Performance
+
+### Schema Caching
+
+- **TTL**: 5 minutes by default
+- **Automatic refresh**: On cache miss
+- **Manual invalidation**: Via debug endpoints
+- **Statistics**: Cache hit/miss ratios
+
+### Connection Pooling
+
+- **Reader connections**: Multiple for read operations
+- **Writer connections**: Single for write operations
+- **Automatic management**: Built-in connection lifecycle
+
+## Deployment
+
+### Docker
+
+```dockerfile
+FROM golang:1.21-alpine AS builder
+WORKDIR /app
+COPY . .
+RUN go build -o sqlitrest ./cmd/sqlitrest
+
+FROM alpine:latest
+RUN apk --no-cache add ca-certificates
+WORKDIR /root/
+COPY --from=builder /app/sqlitrest .
+COPY --from=builder /app/sqlitrest.toml .
+EXPOSE 34334
+CMD ["./sqlitrest", "serve"]
+```
+
+### Systemd
+
+```ini
+[Unit]
+Description=SQLitREST API Server
+After=network.target
+
+[Service]
+Type=simple
+User=sqlitrest
+WorkingDirectory=/opt/sqlitrest
+ExecStart=/opt/sqlitrest/sqlitrest serve
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+```
+
+### Production Tips
+
+1. **Use WAL mode**: Better concurrency
+2. **Enable foreign keys**: Data integrity
+3. **Configure JWT**: Strong secret keys
+4. **Set up policies**: Row-level security
+5. **Monitor cache**: Performance optimization
+6. **Use HTTPS**: Production security
+
+## Examples
+
+### Complete API Session
+
+```bash
+# 1. Start server
+./sqlitrest serve &
+
+# 2. Generate admin token
+ADMIN_TOKEN=$(./sqlitrest generate-token | grep "Admin Token" | cut -d' ' -f3)
+
+# 3. Create user table
+curl -X POST -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '[
+    {"id": 1, "name": "Admin", "email": "admin@example.com", "role": "admin"},
+    {"id": 2, "name": "User", "email": "user@example.com", "role": "user"}
+  ]' \
+  http://localhost:34334/users
+
+# 4. Generate user token
+USER_TOKEN=$(./sqlitrest generate-token | grep "User Token" | cut -d' ' -f3)
+
+# 5. Test Row Level Security
+curl -H "Authorization: Bearer $USER_TOKEN" \
+  http://localhost:34334/users
+# Returns only user's own record
+
+# 6. Test resource embedding
+curl -H "Authorization: Bearer $ADMIN_TOKEN" \
+  "http://localhost:34334/users?select=*,posts(title)"
+
+# 7. Export CSV
+curl -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Accept: text/csv" \
+  http://localhost:34334/users > users.csv
+```
+
+## Troubleshooting
+
+### Common Issues
+
+1. **"Connection refused"** - Server not running
+2. **"Authentication failed"** - Invalid JWT token
+3. **"Permission denied"** - Row Level Security policy
+4. **"Database error"** - SQL syntax or constraint issue
+
+### Debug Mode
+
+```bash
+# Enable verbose logging
+./sqlitrest serve --verbose
+
+# Check configuration
+./sqlitrest config
+
+# Test database connection
+./sqlitrest test-db
+```
+
+### Health Check
+
+```bash
+# Server health
+curl http://localhost:34334/health
+
+# Database status
+curl http://localhost:34334/_debug/databases
+
+# Cache status
+curl http://localhost:34334/_debug/cache
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests
+5. Submit a pull request
+
+## License
+
+MIT License - see LICENSE file for details.
+
+## Support
+
+- **Issues**: https://github.com/hazyhaar/sqlitReST/issues
+- **Documentation**: https://github.com/hazyhaar/sqlitReST/docs
+- **Examples**: https://github.com/hazyhaar/sqlitReST/examples
 
 ---
 
-## ❓ Questions Avant Implémentation
-
-### 1️⃣ Scope Fonctionnel
-
-**Question** : Quel est le besoin PRIMAIRE ?
-
-- [ ] **A** : Outil mono-user pour Horos (exposer `horos_events.db` en REST pour UI/MCP)
-- [ ] **B** : Outil générique communautaire (comme Datasette, réutilisable partout)
-- [ ] **C** : Plateforme multi-user SaaS (multi-tenant, auth complète, production-grade)
-
-**Impact planning** :
-- A → MVP en **5 jours**
-- B → MVP en **10-14 jours** (doc + exemples variés)
-- C → **8-12 semaines** (auth + policies + tests + sécurité)
-
----
-
-### 2️⃣ Cas d'Usage Concret
-
-**Question** : Quelle est la première utilisation RÉELLE prévue ?
-
-Exemple :
-- "Exposer `horos_events.db` en read-only pour qu'une UI web affiche les logs en temps réel"
-- "Permettre au serveur MCP de lire `horos_meta.db.registry` via HTTP au lieu de SQLite direct"
-- "Créer une API publique pour un projet perso basé sur SQLite"
-
-**Pourquoi important** : Détermine les features prioritaires (read-only ? writes ? UDF custom ?)
-
----
-
-### 3️⃣ Authentification
-
-**Question** : Quelle sécurité pour Phase 1 MVP ?
-
-- [ ] **Aucune** (localhost uniquement, réseau local de confiance)
-- [ ] **API key statique** (variable env `SQLITREST_API_KEY`, protection basique)
-- [ ] **Auth découverte** (`.auth.db` optionnelle, comme décrit dans AUTH_PATTERN.md)
-
-**Ma recommandation** : Aucune en Phase 1, `.auth.db` en Phase 3.
-
----
-
-### 4️⃣ Multi-DB dès le Départ ?
-
-**Question** : Pattern Horos 4-BDD nécessaire en Phase 1 ?
-
-- [ ] **Oui** : Exposer `input.db`, `lifecycle.db`, `output.db`, `metadata.db` dès MVP
-- [ ] **Non** : Commencer avec SQLite unique, ajouter multi-DB en Phase 2
-
-**Impact** :
-- Oui → +3-4 jours de dev (routing, namespaces)
-- Non → MVP plus rapide, ajout incrémental
-
----
-
-### 5️⃣ gRPC Justification
-
-**Question** : Pourquoi gRPC en plus de REST ?
-
-Cas d'usage concrets : ______________________________
-
-**Si pas de réponse claire** → Reporter en Phase 4 optionnelle.
-
-**Note** : gRPC ajoute :
-- Complexité (protobuf, code generation)
-- Dépendances supplémentaires
-- Temps de dev : +1-2 semaines
-
----
-
-### 6️⃣ UDF Prioritaires
-
-**Question** : Quelles UDF Go sont nécessaires en Phase 1 ?
-
-Exemples possibles :
-- [ ] Fonctions crypto (sha256, hmac, uuid)
-- [ ] Appels HTTP externes (webhooks, fetch)
-- [ ] Génération données (timestamps, slugs)
-- [ ] Intégration Horos (lecture `horos_meta.db` depuis UDF)
-- [ ] Autre : ______________________________
-
-**Ma recommandation** : UDF basiques (sha256, uuid, now) suffisent pour MVP.
-
----
-
-### 7️⃣ Driver SQLite
-
-**Question** : Préférence entre drivers ?
-
-| Driver | Avantages | Inconvénients |
-|--------|-----------|---------------|
-| **zombiezen** | Pool natif, API bas niveau, très rapide | API moins idiomatique que database/sql |
-| **modernc** | database/sql standard, utilisé dans Horos | Pas de pool natif, API plus haut niveau |
-
-**Mon analyse** :
-- **zombiezen** si performance critique + contrôle fin
-- **modernc** si cohérence Horos primordiale
-
-**Recommandation** : **zombiezen** pour ce projet (performance API REST)
-
----
-
-### 8️⃣ Timeline
-
-**Question** : Délai souhaité ?
-
-- [ ] Démo fonctionnelle : Dans **_____ jours/semaines**
-- [ ] Production-ready : Date limite **_____**
-
-**Planning réaliste** (si Phase 1 MVP validé) :
-- Jour 1-2 : Introspection + Query Builder
-- Jour 3-4 : HTTP handlers + filtres
-- Jour 5 : UDF + OpenAPI
-- Jour 6-7 : Tests + doc + polish
-
-**Livrable J7** : Binaire déployable, README complet, exemples d'utilisation.
-
----
-
-## 🚀 Prêt à Démarrer
-
-**Ce qui est fait** :
-- ✅ Étude PostgREST
-- ✅ Critique approche autoclaude
-- ✅ Architecture Phase 1 détaillée
-- ✅ Pattern auth tierce
-- ✅ Exemples de code Go
-
-**Ce qu'il manque** :
-- ⏳ Validation du scope (réponses aux 8 questions ci-dessus)
-- ⏳ Feu vert pour implémentation
-
-**Dès validation** :
-1. Initialisation repo Git
-2. Setup Go module
-3. Implémentation Phase 1 (5-7 jours)
-4. Livraison MVP fonctionnel
-
----
-
-## 📖 Sources
-
-- [PostgREST Documentation](https://postgrest.org/)
-- [PostgREST GitHub](https://github.com/PostgREST/postgrest)
-- [PostgREST API Reference](https://postgrest.org/en/stable/references/api/resource_embedding.html)
-- [zombiezen SQLite Driver](https://pkg.go.dev/zombiezen.com/go/sqlite)
-- [Go Chi Router](https://github.com/go-chi/chi)
-- [Datasette](https://datasette.io/) (inspiration alternative)
-
----
-
-## 💬 Contact
-
-Questions, clarifications ou feu vert → Répondre aux 8 questions ci-dessus.
-
-Prêt à coder dès validation. 🎯
+**SQLitREST** - Instant REST APIs for SQLite databases 🚀
