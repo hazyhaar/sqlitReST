@@ -1,0 +1,29 @@
+{{define "sse"}}
+<div class="sse-container"
+     id="{{.ID}}"
+     data-channel="{{.Channel}}"
+     hx-ext="sse"
+     sse-connect="/sse{{if .Channel}}?channel={{.Channel}}{{end}}"
+     sse-swap="{{if .Event}}{{.Event}}{{else}}message{{end}}">
+    {{if .Title}}<h3>{{.Title}}</h3>{{end}}
+    <div class="sse-content" sse-swap="{{if .Event}}{{.Event}}{{else}}message{{end}}">
+        {{if .Placeholder}}{{.Placeholder}}{{else}}En attente de messages...{{end}}
+    </div>
+</div>
+<style>
+.sse-container {
+    border: 1px solid var(--pico-muted-border-color);
+    border-radius: var(--pico-border-radius);
+    padding: 1rem;
+    margin: 1rem 0;
+}
+.sse-content {
+    min-height: 2rem;
+}
+.sse-connected::before {
+    content: "●";
+    color: green;
+    margin-right: 0.5rem;
+}
+</style>
+{{end}}

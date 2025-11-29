@@ -133,40 +133,44 @@ func (r *Registry) applyFunc(conn *sqlite.Conn, def *FuncDef) error {
 }
 
 // wrapScalar wraps our ScalarFunc to match zombiezen's API
-func (r *Registry) wrapScalar(fn ScalarFunc) func(ctx sqlite.Context, args []sqlite.Value) {
-	return func(ctx sqlite.Context, args []sqlite.Value) {
+// zombiezen expects: func(ctx sqlite.Context, args []sqlite.Value) (sqlite.Value, error)
+func (r *Registry) wrapScalar(fn ScalarFunc) func(ctx sqlite.Context, args []sqlite.Value) (sqlite.Value, error) {
+	return func(ctx sqlite.Context, args []sqlite.Value) (sqlite.Value, error) {
 		// Create a context with timeout
 		goCtx := context.Background()
 
 		result, err := fn(goCtx, args)
 		if err != nil {
-			ctx.ResultError(err)
-			return
+			return sqlite.Value{}, err
 		}
 
-		// Set result based on type
-		switch v := result.(type) {
-		case nil:
-			ctx.ResultNull()
-		case int:
-			ctx.ResultInt(v)
-		case int64:
-			ctx.ResultInt64(v)
-		case float64:
-			ctx.ResultFloat(v)
-		case string:
-			ctx.ResultText(v)
-		case []byte:
-			ctx.ResultBlob(v)
-		case bool:
-			if v {
-				ctx.ResultInt(1)
-			} else {
-				ctx.ResultInt(0)
-			}
-		default:
-			ctx.ResultText(fmt.Sprintf("%v", v))
+		// Convert result to sqlite.Value
+		return toSQLiteValue(result), nil
+	}
+}
+
+// toSQLiteValue converts a Go value to sqlite.Value
+func toSQLiteValue(v interface{}) sqlite.Value {
+	switch val := v.(type) {
+	case nil:
+		return sqlite.Value{} // NULL
+	case int:
+		return sqlite.IntegerValue(int64(val))
+	case int64:
+		return sqlite.IntegerValue(val)
+	case float64:
+		return sqlite.FloatValue(val)
+	case string:
+		return sqlite.TextValue(val)
+	case []byte:
+		return sqlite.BlobValue(val)
+	case bool:
+		if val {
+			return sqlite.IntegerValue(1)
 		}
+		return sqlite.IntegerValue(0)
+	default:
+		return sqlite.TextValue(fmt.Sprintf("%v", v))
 	}
 }
 

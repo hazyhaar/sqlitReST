@@ -93,6 +93,11 @@ SELECT
     'Essayez les fonctions IA' as description,
     '/llm-test' as link;
 
+SELECT
+    'Temps Réel' as title,
+    'SSE - Server-Sent Events' as description,
+    '/realtime' as link;
+
 -- Info version avec fonction custom
 SELECT
     'text' as component,

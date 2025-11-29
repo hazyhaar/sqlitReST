@@ -14,6 +14,7 @@ import (
 	"github.com/horos/gopage/pkg/engine"
 	"github.com/horos/gopage/pkg/funcs"
 	"github.com/horos/gopage/pkg/render"
+	"github.com/horos/gopage/pkg/sse"
 )
 
 // Config holds server configuration
@@ -80,6 +81,10 @@ func New(cfg Config) (*Server, error) {
 	// Register HTTP functions
 	registry.RegisterHTTPFunctions()
 
+	// Register SSE functions
+	registry.RegisterSSEFunctions()
+	log.Println("SSE functions enabled")
+
 	// Set registry on executor
 	executor.SetRegistry(registry)
 
@@ -117,6 +122,9 @@ func (s *Server) setupRoutes() {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("OK"))
 	})
+
+	// SSE endpoint for real-time updates
+	r.Get("/sse", sse.GetHub().Handler())
 
 	// Main handler for SQL pages
 	r.Get("/*", s.handleSQLPage)
