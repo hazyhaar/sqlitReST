@@ -108,8 +108,9 @@ func (s *Server) handleSQLPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Build parameters from query string and form
-	params := s.extractParams(r)
+	// Parse request parameters with pagination support
+	reqParams := ParseRequestParams(r)
+	params := reqParams.ToSQLParams()
 
 	// Execute SQL statements
 	ctx := r.Context()
@@ -124,30 +125,48 @@ func (s *Server) handleSQLPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Parse components from results
-	components := s.renderer.ParseComponents(rows)
+	// Parse components from results (using data-aware parser)
+	components := s.renderer.ParseDataComponents(rows)
 
 	// Build page data
 	pageData := map[string]interface{}{
-		"Path":   path,
-		"Params": params,
-		"Method": r.Method,
+		"Path":       path,
+		"Params":     params,
+		"Method":     r.Method,
+		"Page":       reqParams.Page,
+		"PerPage":    reqParams.PerPage,
+		"Sort":       reqParams.Sort,
+		"Search":     reqParams.Search,
+		"IsHTMX":     r.Header.Get("HX-Request") == "true",
+		"RequestURL": r.URL.String(),
 	}
 
+	// Check if this is an HTMX request for partial content
+	isHTMX := r.Header.Get("HX-Request") == "true"
+	htmxTarget := r.Header.Get("HX-Target")
+
 	// Render the page
-	html, err := s.renderer.RenderPage(components, pageData)
+	var html string
+	if isHTMX && htmxTarget != "" {
+		// Partial rendering for HTMX - only render content
+		html, err = s.renderer.RenderPartial(components, pageData)
+	} else {
+		html, err = s.renderer.RenderPage(components, pageData)
+	}
+
 	if err != nil {
 		s.handleError(w, r, fmt.Errorf("render failed: %w", err))
 		return
 	}
 
-	// Check if this is an HTMX request
-	if r.Header.Get("HX-Request") == "true" {
-		// For HTMX, just return the content without the full layout
-		// TODO: Implement partial rendering
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+	// Add HTMX-specific headers if needed
+	if isHTMX {
+		// Allow pushing URL to browser history
+		w.Header().Set("HX-Push-Url", r.URL.String())
 	}
 
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Write([]byte(html))
 }
 
@@ -174,39 +193,6 @@ func (s *Server) findSQLFile(path string) string {
 	return ""
 }
 
-// extractParams extracts parameters from the request
-func (s *Server) extractParams(r *http.Request) map[string]string {
-	params := make(map[string]string)
-
-	// Query parameters
-	for key, values := range r.URL.Query() {
-		if len(values) > 0 {
-			params[key] = values[0]
-		}
-	}
-
-	// Form values (for POST)
-	if r.Method == http.MethodPost {
-		if err := r.ParseForm(); err == nil {
-			for key, values := range r.PostForm {
-				if len(values) > 0 {
-					params[key] = values[0]
-				}
-			}
-		}
-	}
-
-	// URL path parameters from chi
-	if rctx := chi.RouteContext(r.Context()); rctx != nil {
-		for i, key := range rctx.URLParams.Keys {
-			if i < len(rctx.URLParams.Values) {
-				params[key] = rctx.URLParams.Values[i]
-			}
-		}
-	}
-
-	return params
-}
 
 // handleSpecialResponses handles redirects and other special SQL responses
 func (s *Server) handleSpecialResponses(w http.ResponseWriter, r *http.Request, rows []engine.Row) bool {

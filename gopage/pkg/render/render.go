@@ -195,6 +195,26 @@ func (r *Renderer) RenderPage(components []Component, pageData map[string]interf
 	return buf.String(), nil
 }
 
+// RenderPartial renders only the content components without the layout (for HTMX)
+func (r *Renderer) RenderPartial(components []Component, pageData map[string]interface{}) (string, error) {
+	var contentHTML strings.Builder
+
+	for _, c := range components {
+		// Skip shell component for partial rendering
+		if c.Type == "shell" {
+			continue
+		}
+
+		html, err := r.RenderComponent(c)
+		if err != nil {
+			return "", fmt.Errorf("failed to render %s component: %w", c.Type, err)
+		}
+		contentHTML.WriteString(html)
+	}
+
+	return contentHTML.String(), nil
+}
+
 // RenderComponent renders a single component
 func (r *Renderer) RenderComponent(comp Component) (string, error) {
 	var buf bytes.Buffer
@@ -217,6 +237,9 @@ func (r *Renderer) RenderComponent(comp Component) (string, error) {
 	return buf.String(), nil
 }
 
+// Row is an alias for engine.Row for convenience
+type Row = engine.Row
+
 // renderGenericComponent renders a component without a specific template
 func (r *Renderer) renderGenericComponent(comp Component) (string, error) {
 	switch comp.Type {
@@ -228,6 +251,8 @@ func (r *Renderer) renderGenericComponent(comp Component) (string, error) {
 		return r.renderList(comp.Properties)
 	case "card":
 		return r.renderCard(comp.Properties)
+	case "cards":
+		return r.renderCards(comp.Properties)
 	case "form":
 		return r.renderForm(comp.Properties)
 	case "debug":
@@ -260,15 +285,48 @@ func (r *Renderer) renderText(props map[string]interface{}) (string, error) {
 	return buf.String(), nil
 }
 
-// renderTable renders a table component
+// renderTable renders a table component with data
 func (r *Renderer) renderTable(props map[string]interface{}) (string, error) {
-	// Table rendering will use the actual data rows
-	return `<div class="table-component"><!-- Table data will be rendered here --></div>`, nil
+	dc := DataComponent{
+		Type:    "table",
+		Options: props,
+	}
+
+	if title, ok := props["title"].(string); ok {
+		dc.Title = title
+	}
+
+	if cols, ok := props["columns"].([]ColumnDef); ok {
+		dc.Columns = cols
+	}
+
+	if rows, ok := props["rows"].([]engine.Row); ok {
+		dc.Rows = rows
+	}
+
+	if pag, ok := props["pagination"].(*PaginationInfo); ok {
+		dc.Pagination = pag
+	}
+
+	return r.RenderDataTable(dc)
 }
 
-// renderList renders a list component
+// renderList renders a list component with data
 func (r *Renderer) renderList(props map[string]interface{}) (string, error) {
-	return `<div class="list-component"><!-- List data will be rendered here --></div>`, nil
+	dc := DataComponent{
+		Type:    "list",
+		Options: props,
+	}
+
+	if title, ok := props["title"].(string); ok {
+		dc.Title = title
+	}
+
+	if rows, ok := props["rows"].([]engine.Row); ok {
+		dc.Rows = rows
+	}
+
+	return r.RenderDataList(dc)
 }
 
 // renderCard renders a card component
@@ -311,4 +369,22 @@ func (r *Renderer) renderDebug(props map[string]interface{}) (string, error) {
 	}
 	buf.WriteString(`</pre>`)
 	return buf.String(), nil
+}
+
+// renderCards renders a grid of cards with data
+func (r *Renderer) renderCards(props map[string]interface{}) (string, error) {
+	dc := DataComponent{
+		Type:    "cards",
+		Options: props,
+	}
+
+	if title, ok := props["title"].(string); ok {
+		dc.Title = title
+	}
+
+	if rows, ok := props["rows"].([]engine.Row); ok {
+		dc.Rows = rows
+	}
+
+	return r.RenderDataCards(dc)
 }

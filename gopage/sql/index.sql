@@ -1,26 +1,77 @@
--- Page d'accueil GoPage
+-- Page d'accueil GoPage Forum
+-- Démontre les composants de base
 
 -- Shell (layout)
 SELECT
     'shell' as component,
-    'GoPage - Forum' as title,
-    'Un forum propulsé par SQL et Go' as footer;
+    'GoPage Forum' as title,
+    'Propulsé par GoPage - SQL + Go + HTMX' as footer;
 
--- Texte de bienvenue
+-- Hero section
 SELECT
     'text' as component,
     'Bienvenue sur GoPage' as title,
-    'Ce forum est entièrement généré à partir de fichiers SQL.
-     Chaque page correspond à un fichier .sql qui définit les composants à afficher.' as contents;
+    'Un forum entièrement propulsé par SQL. Chaque page est un fichier .sql qui définit les composants à afficher.' as contents;
 
--- Statistiques (simulées)
+-- Statistiques rapides
+SELECT
+    'cards' as component,
+    'Forum en chiffres' as title;
+
+SELECT
+    'Topics' as title,
+    '156' as description,
+    'Discussions actives' as footer;
+
+SELECT
+    'Messages' as title,
+    '2,847' as description,
+    'Réponses postées' as footer;
+
+SELECT
+    'Membres' as title,
+    '89' as description,
+    'Utilisateurs inscrits' as footer;
+
+SELECT
+    'En ligne' as title,
+    '12' as description,
+    'Connectés maintenant' as footer;
+
+-- Derniers topics
+SELECT
+    'text' as component,
+    'Derniers Topics' as title;
+
+SELECT
+    'list' as component,
+    'recent-topics' as id;
+
+SELECT
+    'Bienvenue sur GoPage Forum' as title,
+    '/topic?id=1' as link,
+    'admin - 42 réponses' as description;
+
+SELECT
+    'Comment utiliser les composants SQL' as title,
+    '/topic?id=2' as link,
+    'dev_john - 15 réponses' as description;
+
+SELECT
+    'HTMX et Alpine.js dans GoPage' as title,
+    '/topic?id=3' as link,
+    'frontend_marie - 28 réponses' as description;
+
+-- Call to action
 SELECT
     'card' as component,
-    'Statistiques' as title,
-    'Utilisateurs: 42 | Messages: 1337 | Topics: 256' as description;
+    'Voir tous les topics' as title,
+    'Parcourez l''ensemble des discussions du forum' as description,
+    '/topics' as link;
 
--- Debug info
+-- Debug info (en mode développement)
 SELECT
     'debug' as component,
-    'Index page loaded' as message,
-    datetime('now') as timestamp;
+    'Page: index' as page,
+    datetime('now', 'localtime') as rendered_at,
+    'v0.1.0' as version;
