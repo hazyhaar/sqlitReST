@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{if .title}}{{.title}}{{else}}GoPage{{end}}</title>
+
+    <!-- Pico.css for minimal styling -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+
+    <!-- HTMX for dynamic updates -->
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+
+    <!-- Alpine.js for reactivity -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <style>
+        :root {
+            --pico-font-family: system-ui, -apple-system, sans-serif;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        nav {
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: var(--pico-card-background-color);
+            border-radius: var(--pico-border-radius);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: var(--pico-card-box-shadow);
+        }
+
+        .card h3 {
+            margin-top: 0;
+        }
+
+        .text-component {
+            margin-bottom: 1.5rem;
+        }
+
+        .debug-component {
+            background: #1a1a2e;
+            color: #0f0;
+            padding: 1rem;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+        }
+
+        /* HTMX loading indicator */
+        .htmx-indicator {
+            opacity: 0;
+            transition: opacity 200ms ease-in;
+        }
+
+        .htmx-request .htmx-indicator,
+        .htmx-request.htmx-indicator {
+            opacity: 1;
+        }
+
+        /* Alpine.js transitions */
+        [x-cloak] {
+            display: none !important;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        footer {
+            margin-top: 3rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--pico-muted-border-color);
+            text-align: center;
+            color: var(--pico-muted-color);
+        }
+    </style>
+
+    {{if .css}}
+    <style>{{.css | safe}}</style>
+    {{end}}
+</head>
+<body>
+    <nav class="container">
+        <ul>
+            <li><strong>{{if .title}}{{.title}}{{else}}GoPage{{end}}</strong></li>
+        </ul>
+        <ul>
+            {{if .menu_item}}
+            {{range .menu_item}}
+            <li><a href="{{.link}}">{{.title}}</a></li>
+            {{end}}
+            {{else}}
+            <li><a href="/">Accueil</a></li>
+            {{end}}
+        </ul>
+    </nav>
+
+    <main class="container" x-data="{ loaded: true }" x-init="loaded = true">
+        {{.Content}}
+    </main>
+
+    <footer class="container">
+        <small>
+            {{if .footer}}
+            {{.footer | safe}}
+            {{else}}
+            Propulsé par GoPage
+            {{end}}
+        </small>
+    </footer>
+
+    {{if .js}}
+    <script>{{.js | safe}}</script>
+    {{end}}
+</body>
+</html>

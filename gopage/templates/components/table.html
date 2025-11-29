@@ -1,0 +1,60 @@
+<div class="table-component fade-in"
+     {{if .hx_get}}hx-get="{{.hx_get}}" hx-trigger="load"{{end}}
+     {{if .hx_target}}hx-target="{{.hx_target}}"{{end}}>
+
+    {{if .title}}
+    <h3>{{.title}}</h3>
+    {{end}}
+
+    {{if .description}}
+    <p>{{.description}}</p>
+    {{end}}
+
+    <figure>
+        <table role="grid">
+            {{if .columns}}
+            <thead>
+                <tr>
+                    {{range .columns}}
+                    <th scope="col">{{.label | default .name}}</th>
+                    {{end}}
+                </tr>
+            </thead>
+            {{end}}
+
+            <tbody id="{{.id | default "table-body"}}">
+                {{if .rows}}
+                {{range .rows}}
+                <tr>
+                    {{range $key, $value := .}}
+                    <td>{{$value}}</td>
+                    {{end}}
+                </tr>
+                {{end}}
+                {{else}}
+                <tr>
+                    <td colspan="100%">Aucune donnée</td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </figure>
+
+    {{if .pagination}}
+    <nav>
+        <ul>
+            {{if .prev_page}}
+            <li><a href="{{.prev_page}}" hx-get="{{.prev_page}}" hx-target="#{{.id | default "table-body"}}" hx-swap="innerHTML">&laquo; Précédent</a></li>
+            {{else}}
+            <li><a href="#" aria-disabled="true">&laquo; Précédent</a></li>
+            {{end}}
+
+            {{if .next_page}}
+            <li><a href="{{.next_page}}" hx-get="{{.next_page}}" hx-target="#{{.id | default "table-body"}}" hx-swap="innerHTML">Suivant &raquo;</a></li>
+            {{else}}
+            <li><a href="#" aria-disabled="true">Suivant &raquo;</a></li>
+            {{end}}
+        </ul>
+    </nav>
+    {{end}}
+</div>

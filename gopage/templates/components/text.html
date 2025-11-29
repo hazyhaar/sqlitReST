@@ -1,0 +1,19 @@
+<div class="text-component fade-in">
+    {{if .title}}
+    <h2>{{.title}}</h2>
+    {{end}}
+
+    {{if .contents}}
+    <p>{{.contents}}</p>
+    {{end}}
+
+    {{if .html}}
+    {{.html | safe}}
+    {{end}}
+
+    {{if .markdown}}
+    <div class="markdown-content">
+        {{.markdown | safe}}
+    </div>
+    {{end}}
+</div>

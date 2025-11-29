@@ -1,0 +1,129 @@
+<form class="form-component fade-in"
+    method="{{.method | default "POST"}}"
+    action="{{.action | default ""}}"
+    {{if .hx_post}}hx-post="{{.hx_post}}"{{end}}
+    {{if .hx_put}}hx-put="{{.hx_put}}"{{end}}
+    {{if .hx_delete}}hx-delete="{{.hx_delete}}"{{end}}
+    {{if .hx_target}}hx-target="{{.hx_target}}"{{end}}
+    {{if .hx_swap}}hx-swap="{{.hx_swap}}"{{end}}
+    {{if .enctype}}enctype="{{.enctype}}"{{end}}
+    x-data="{ submitting: false }"
+    @submit="submitting = true">
+
+    {{if .title}}
+    <h3>{{.title}}</h3>
+    {{end}}
+
+    {{if .description}}
+    <p>{{.description}}</p>
+    {{end}}
+
+    {{range .fields}}
+    <label for="{{.name}}">
+        {{.label | default .name}}
+        {{if .required}}<span aria-label="required">*</span>{{end}}
+    </label>
+
+    {{if eq .type "textarea"}}
+    <textarea
+        id="{{.name}}"
+        name="{{.name}}"
+        {{if .placeholder}}placeholder="{{.placeholder}}"{{end}}
+        {{if .required}}required{{end}}
+        {{if .rows}}rows="{{.rows}}"{{end}}
+        {{if .readonly}}readonly{{end}}
+        {{if .disabled}}disabled{{end}}>{{.value}}</textarea>
+
+    {{else if eq .type "select"}}
+    <select
+        id="{{.name}}"
+        name="{{.name}}"
+        {{if .required}}required{{end}}
+        {{if .disabled}}disabled{{end}}>
+        {{if .placeholder}}
+        <option value="">{{.placeholder}}</option>
+        {{end}}
+        {{range .options}}
+        <option value="{{.value}}" {{if .selected}}selected{{end}}>{{.label | default .value}}</option>
+        {{end}}
+    </select>
+
+    {{else if eq .type "checkbox"}}
+    <label>
+        <input
+            type="checkbox"
+            id="{{.name}}"
+            name="{{.name}}"
+            value="{{.value | default "1"}}"
+            {{if .checked}}checked{{end}}
+            {{if .disabled}}disabled{{end}}>
+        {{.text}}
+    </label>
+
+    {{else if eq .type "radio"}}
+    <fieldset>
+        {{range .options}}
+        <label>
+            <input
+                type="radio"
+                name="{{$.name}}"
+                value="{{.value}}"
+                {{if .checked}}checked{{end}}>
+            {{.label}}
+        </label>
+        {{end}}
+    </fieldset>
+
+    {{else if eq .type "hidden"}}
+    <input type="hidden" id="{{.name}}" name="{{.name}}" value="{{.value}}">
+
+    {{else if eq .type "file"}}
+    <input
+        type="file"
+        id="{{.name}}"
+        name="{{.name}}"
+        {{if .accept}}accept="{{.accept}}"{{end}}
+        {{if .multiple}}multiple{{end}}
+        {{if .required}}required{{end}}>
+
+    {{else}}
+    <input
+        type="{{.type | default "text"}}"
+        id="{{.name}}"
+        name="{{.name}}"
+        {{if .value}}value="{{.value}}"{{end}}
+        {{if .placeholder}}placeholder="{{.placeholder}}"{{end}}
+        {{if .required}}required{{end}}
+        {{if .readonly}}readonly{{end}}
+        {{if .disabled}}disabled{{end}}
+        {{if .pattern}}pattern="{{.pattern}}"{{end}}
+        {{if .min}}min="{{.min}}"{{end}}
+        {{if .max}}max="{{.max}}"{{end}}
+        {{if .step}}step="{{.step}}"{{end}}
+        {{if .autocomplete}}autocomplete="{{.autocomplete}}"{{end}}>
+    {{end}}
+
+    {{if .help}}
+    <small>{{.help}}</small>
+    {{end}}
+    {{end}}
+
+    <footer>
+        <button type="submit" :disabled="submitting" aria-busy="submitting">
+            <span x-show="!submitting">{{.submit_label | default "Envoyer"}}</span>
+            <span x-show="submitting">Envoi en cours...</span>
+        </button>
+
+        {{if .reset}}
+        <button type="reset" class="secondary">Réinitialiser</button>
+        {{end}}
+
+        {{if .cancel_url}}
+        <a href="{{.cancel_url}}" role="button" class="outline">Annuler</a>
+        {{end}}
+    </footer>
+
+    {{if .error}}
+    <div role="alert">{{.error}}</div>
+    {{end}}
+</form>

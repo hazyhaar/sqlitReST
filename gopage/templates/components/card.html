@@ -1,0 +1,65 @@
+<article class="card fade-in"
+    x-data="{ expanded: false }"
+    {{if .hx_get}}hx-get="{{.hx_get}}"{{end}}
+    {{if .hx_trigger}}hx-trigger="{{.hx_trigger}}"{{end}}>
+
+    {{if .image}}
+    <header>
+        <img src="{{.image}}" alt="{{.title}}" loading="lazy">
+    </header>
+    {{end}}
+
+    {{if .title}}
+    <h3>
+        {{if .link}}
+        <a href="{{.link}}">{{.title}}</a>
+        {{else}}
+        {{.title}}
+        {{end}}
+    </h3>
+    {{end}}
+
+    {{if .subtitle}}
+    <small>{{.subtitle}}</small>
+    {{end}}
+
+    {{if .description}}
+    <p>{{.description}}</p>
+    {{end}}
+
+    {{if .content}}
+    <div x-show="expanded" x-collapse>
+        {{.content | safe}}
+    </div>
+    {{if .expandable}}
+    <button @click="expanded = !expanded" class="outline">
+        <span x-text="expanded ? 'Réduire' : 'Voir plus'"></span>
+    </button>
+    {{end}}
+    {{end}}
+
+    {{if .footer}}
+    <footer>
+        {{.footer | safe}}
+    </footer>
+    {{end}}
+
+    {{if .actions}}
+    <footer>
+        {{range .actions}}
+        {{if eq .type "link"}}
+        <a href="{{.href}}" role="button" {{if .outline}}class="outline"{{end}}>{{.label}}</a>
+        {{else if eq .type "button"}}
+        <button
+            {{if .hx_post}}hx-post="{{.hx_post}}"{{end}}
+            {{if .hx_delete}}hx-delete="{{.hx_delete}}"{{end}}
+            {{if .hx_confirm}}hx-confirm="{{.hx_confirm}}"{{end}}
+            {{if .outline}}class="outline"{{end}}
+            {{if .secondary}}class="secondary"{{end}}>
+            {{.label}}
+        </button>
+        {{end}}
+        {{end}}
+    </footer>
+    {{end}}
+</article>
