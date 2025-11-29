@@ -6,7 +6,7 @@ import (
 
 	"zombiezen.com/go/sqlite"
 
-	"github.com/horos/gopage/pkg/sse"
+	"github.com/hazyhaar/sqlitrest/pkg/sse"
 )
 
 // RegisterSSEFunctions registers SSE-related SQL functions

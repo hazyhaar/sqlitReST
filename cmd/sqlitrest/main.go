@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"syscall"
 
-	"github.com/horos/gopage/pkg/server"
+	"github.com/hazyhaar/sqlitrest/pkg/server"
 )
 
 var (
@@ -38,7 +38,7 @@ func main() {
 	flag.Parse()
 
 	if *showVersion {
-		fmt.Printf("GoPage version %s\n", version)
+		fmt.Printf("sqlitREST version %s\n", version)
 		os.Exit(0)
 	}
 
@@ -131,7 +131,7 @@ func ensureDir(path string) error {
 
 func printStartupInfo(cfg server.Config) {
 	log.Println("=================================")
-	log.Printf("  GoPage v%s", version)
+	log.Printf("  sqlitREST v%s", version)
 	log.Println("=================================")
 	log.Printf("  Port:      %d", cfg.Port)
 	log.Printf("  Database:  %s", cfg.DBPath)

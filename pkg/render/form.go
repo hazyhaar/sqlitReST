@@ -6,7 +6,7 @@ import (
 	"html/template"
 	"strings"
 
-	"github.com/horos/gopage/pkg/engine"
+	"github.com/hazyhaar/sqlitrest/pkg/engine"
 )
 
 // FormField represents a form field definition from SQL

@@ -102,7 +102,7 @@ func (r *Registry) makeHTTPRequest(ctx context.Context, method, urlStr string, b
 		req.Header.Set("Content-Type", contentType)
 	}
 
-	req.Header.Set("User-Agent", "GoPage/0.1")
+	req.Header.Set("User-Agent", "sqlitREST/0.1")
 
 	client := &http.Client{
 		Timeout: time.Duration(r.HTTPTimeout) * time.Second,
@@ -292,7 +292,7 @@ func (r *Registry) funcHTTPHead(ctx context.Context, args []sqlite.Value) (inter
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
-	req.Header.Set("User-Agent", "GoPage/0.1")
+	req.Header.Set("User-Agent", "sqlitREST/0.1")
 
 	client := &http.Client{
 		Timeout: time.Duration(r.HTTPTimeout) * time.Second,
@@ -345,7 +345,7 @@ func (r *Registry) funcWebhook(ctx context.Context, args []sqlite.Value) (interf
 		}
 
 		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("User-Agent", "GoPage-Webhook/0.1")
+		req.Header.Set("User-Agent", "sqlitREST-Webhook/0.1")
 
 		client := &http.Client{Timeout: 10 * time.Second}
 		resp, err := client.Do(req)

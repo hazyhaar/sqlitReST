@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/horos/gopage/pkg/engine"
+	"github.com/hazyhaar/sqlitrest/pkg/engine"
 )
 
 // DataComponent represents a component that displays data from SQL queries

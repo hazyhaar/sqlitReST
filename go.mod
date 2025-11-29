@@ -1,4 +1,4 @@
-module github.com/horos/gopage
+module github.com/hazyhaar/sqlitrest
 
 go 1.22
 

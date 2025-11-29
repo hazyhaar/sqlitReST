@@ -181,7 +181,7 @@ func (r *Registry) RegisterBuiltins() {
 		Name:          "gopage_version",
 		NumArgs:       0,
 		Deterministic: true,
-		Description:   "Returns GoPage version",
+		Description:   "Returns sqlitREST version",
 		ScalarFunc:    funcVersion,
 	})
 

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{if .title}}{{.title}}{{else}}GoPage{{end}}</title>
+    <title>{{if .title}}{{.title}}{{else}}sqlitREST{{end}}</title>
 
     <!-- Pico.css for minimal styling -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
@@ -228,7 +228,7 @@
 <body>
     <nav class="container">
         <ul>
-            <li><strong>{{if .title}}{{.title}}{{else}}GoPage{{end}}</strong></li>
+            <li><strong>{{if .title}}{{.title}}{{else}}sqlitREST{{end}}</strong></li>
         </ul>
         <ul>
             {{if .menu_item}}
@@ -250,7 +250,7 @@
             {{if .footer}}
             {{.footer | safe}}
             {{else}}
-            Propulsé par GoPage
+            Propulsé par sqlitREST
             {{end}}
         </small>
     </footer>

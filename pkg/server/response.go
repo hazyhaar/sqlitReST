@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/horos/gopage/pkg/engine"
+	"github.com/hazyhaar/sqlitrest/pkg/engine"
 )
 
 // ResponseType indicates the type of response to send

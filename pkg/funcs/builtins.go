@@ -19,11 +19,11 @@ import (
 	"zombiezen.com/go/sqlite"
 )
 
-const gopageVersion = "0.1.0"
+const sqlitrestVersion = "0.1.0"
 
-// funcVersion returns the GoPage version
+// funcVersion returns the sqlitREST version
 func funcVersion(ctx context.Context, args []sqlite.Value) (interface{}, error) {
-	return gopageVersion, nil
+	return sqlitrestVersion, nil
 }
 
 // funcUUID generates a UUID v4

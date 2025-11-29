@@ -8,7 +8,7 @@ import (
 	"zombiezen.com/go/sqlite"
 	"zombiezen.com/go/sqlite/sqlitex"
 
-	"github.com/horos/gopage/pkg/funcs"
+	"github.com/hazyhaar/sqlitrest/pkg/funcs"
 )
 
 // Row represents a single result row as key-value pairs

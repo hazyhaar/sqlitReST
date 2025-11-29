@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/horos/gopage/pkg/engine"
+	"github.com/hazyhaar/sqlitrest/pkg/engine"
 )
 
 // Component represents a renderable component from SQL results

@@ -11,10 +11,10 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/horos/gopage/pkg/engine"
-	"github.com/horos/gopage/pkg/funcs"
-	"github.com/horos/gopage/pkg/render"
-	"github.com/horos/gopage/pkg/sse"
+	"github.com/hazyhaar/sqlitrest/pkg/engine"
+	"github.com/hazyhaar/sqlitrest/pkg/funcs"
+	"github.com/hazyhaar/sqlitrest/pkg/render"
+	"github.com/hazyhaar/sqlitrest/pkg/sse"
 )
 
 // Config holds server configuration
@@ -35,7 +35,7 @@ type Config struct {
 	HTTPTimeout int // Timeout in seconds for HTTP functions
 }
 
-// Server represents the GoPage HTTP server
+// Server represents the sqlitREST HTTP server
 type Server struct {
 	config   Config
 	router   *chi.Mux
@@ -45,7 +45,7 @@ type Server struct {
 	registry *funcs.Registry
 }
 
-// New creates a new GoPage server
+// New creates a new sqlitREST server
 func New(cfg Config) (*Server, error) {
 	// Create SQL executor
 	executor, err := engine.NewSQLExecutor(cfg.DBPath)
@@ -268,7 +268,7 @@ func (s *Server) handleError(w http.ResponseWriter, r *http.Request, err error) 
 // Run starts the HTTP server
 func (s *Server) Run() error {
 	addr := fmt.Sprintf(":%d", s.config.Port)
-	log.Printf("GoPage server starting on http://localhost%s", addr)
+	log.Printf("sqlitREST server starting on http://localhost%s", addr)
 	return http.ListenAndServe(addr, s.router)
 }
 

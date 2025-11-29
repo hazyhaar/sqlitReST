@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/horos/gopage/pkg/render"
+	"github.com/hazyhaar/sqlitrest/pkg/render"
 )
 
 // RequestParams holds parsed request parameters
