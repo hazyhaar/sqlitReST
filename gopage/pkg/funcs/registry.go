@@ -140,32 +140,32 @@ func (r *Registry) wrapScalar(fn ScalarFunc) func(ctx sqlite.Context, args []sql
 
 		result, err := fn(goCtx, args)
 		if err != nil {
-			ctx.SetResultError(err)
+			ctx.ResultError(err)
 			return
 		}
 
 		// Set result based on type
 		switch v := result.(type) {
 		case nil:
-			ctx.SetResultNull()
+			ctx.ResultNull()
 		case int:
-			ctx.SetResultInt(v)
+			ctx.ResultInt(v)
 		case int64:
-			ctx.SetResultInt64(v)
+			ctx.ResultInt64(v)
 		case float64:
-			ctx.SetResultFloat(v)
+			ctx.ResultFloat(v)
 		case string:
-			ctx.SetResultText(v)
+			ctx.ResultText(v)
 		case []byte:
-			ctx.SetResultBlob(v)
+			ctx.ResultBlob(v)
 		case bool:
 			if v {
-				ctx.SetResultInt(1)
+				ctx.ResultInt(1)
 			} else {
-				ctx.SetResultInt(0)
+				ctx.ResultInt(0)
 			}
 		default:
-			ctx.SetResultText(fmt.Sprintf("%v", v))
+			ctx.ResultText(fmt.Sprintf("%v", v))
 		}
 	}
 }
